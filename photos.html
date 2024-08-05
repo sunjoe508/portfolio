@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photo Gallery</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to right, #f0f0f0, #d4d4d4);
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 80%;
+            margin: 20px auto;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #DD761C;
+            font-size: 2.5em;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .gallery {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .gallery-item {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            overflow: hidden;
+            border-radius: 15px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+            cursor: pointer;
+        }
+        .gallery-item:hover {
+            transform: scale(1.05);
+        }
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 15px;
+        }
+        .gallery-item .actions {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .gallery-item .actions button {
+            background: rgba(255, 255, 255, 0.7);
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+        }
+        .gallery-item .actions button:hover {
+            background: rgba(255, 255, 255, 1);
+        }
+        .gallery-item .actions i {
+            font-size: 1.2em;
+        }
+        .gallery-item .actions .like i {
+            color: #ff0000;
+        }
+        .gallery-item .actions .comment i {
+            color: #0000ff;
+        }
+        .gallery-item .actions .share i {
+            color: #00ff00;
+        }
+        .gallery-item .like-count {
+            font-size: 1em;
+            margin-left: 5px;
+        }
+        .comments {
+            display: none;
+            position: absolute;
+            bottom: 50px;
+            left: 10px;
+            width: calc(100% - 20px);
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 5px;
+            padding: 10px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        .comments.visible {
+            display: block;
+        }
+        .comments ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        .comments ul li {
+            margin-bottom: 5px;
+        }
+        .comments input {
+            width: 80%;
+            padding: 5px;
+            margin-right: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .comments button {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007BFF;
+            color: white;
+            cursor: pointer;
+        }
+        .comments button:hover {
+            background-color: #0056b3;
+        }
+        .upload-container {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .upload-container input[type="file"] {
+            display: none;
+        }
+        .upload-container label {
+            padding: 10px 20px;
+            border: 1px solid #007BFF;
+            border-radius: 5px;
+            background-color: #007BFF;
+            color: white;
+            cursor: pointer;
+        }
+        .upload-container label:hover {
+            background-color: #0056b3;
+        }
+        .back-home {
+            display: block;
+            width: 150px;
+            margin: 20px auto;
+            padding: 10px;
+            text-align: center;
+            background-color: #DD761C;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 1.2em;
+        }
+        .back-home:hover {
+            background-color: #c75d2a;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            position: relative;
+        }
+        .modal-content img {
+            max-width: 100%;
+            border-radius: 10px;
+        }
+        .modal-content .close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 1.5em;
+            cursor: pointer;
+        }
+        .modal-content .download {
+            display: block;
+            margin-top: 10px;
+            text-align: center;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .modal-content .download:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><i class="fas fa-camera-retro"></i> Photo Gallery</h1>
+        <a href="home.html" class="back-home">Back Home</a>
+        <div class="upload-container">
+            <input type="file" id="file-upload" accept="image/*" multiple>
+            <label for="file-upload">Upload Images</label>
+        </div>
+        <div class="gallery" id="gallery">
+            <!-- Existing Images and New Images will be inserted here -->
+        </div>
+    </div>
+
+    <!-- Modal for Enlarged Image -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <img id="modal-image" src="" alt="Enlarged Photo">
+            <a id="download-link" class="download" download>Download Image</a>
+        </div>
+    </div>
+
+    <script>
+        const likes = {};
+
+        // Function to show share options
+        function showShareOptions(imageUrl) {
+            const options = `Share this photo:
+            \nFacebook: https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(imageUrl)}
+            \nTwitter: https://twitter.com/intent/tweet?url=${encodeURIComponent(imageUrl)}
+            \nInstagram: https://www.instagram.com
+            `;
+            alert(options);
+        }
+
+        // Function to toggle comments visibility
+        function toggleComments(id) {
+            const commentsDiv = document.getElementById(`comments-${id}`);
+            commentsDiv.classList.toggle('visible');
+        }
+
+        // Function to add a new comment
+        function addComment(id) {
+            const input = document.getElementById(`comment-input-${id}`);
+            const commentText = input.value.trim();
+            if (commentText) {
+                const commentsList = document.querySelector(`#comments-${id} ul`);
+                const commentItem = document.createElement('li');
+                commentItem.textContent = commentText;
+                commentsList.appendChild(commentItem);
+                input.value = '';
+            }
+        }
+
+        // Function to like a photo
+        function likePhoto(id) {
+            if (!localStorage.getItem(`liked-${id}`)) {
+                // Mark photo as liked
+                localStorage.setItem(`liked-${id}`, true);
+
+                // Update like count
+                const likeCountSpan = document.getElementById(`like-count-${id}`);
+                const currentLikes = parseInt(likeCountSpan.textContent, 10);
+                likeCountSpan.textContent = currentLikes + 1;
+
+                // Update likes in local storage
+                const images = JSON.parse(localStorage.getItem('images')) || [];
+                const image = images.find(img => img.id === id);
+                if (image) {
+                    image.likes += 1;
+                    localStorage.setItem('images', JSON.stringify(images));
+                }
+            } else {
+                alert('You can only like this photo once.');
+            }
+        }
+
+        // Function to open modal with enlarged image
+        function openModal(imageSrc) {
+            const modal = document.getElementById('modal');
+            const modalImage = document.getElementById('modal-image');
+            const downloadLink = document.getElementById('download-link');
+            modalImage.src = imageSrc;
+            downloadLink.href = imageSrc;
+            modal.style.display = 'flex';
+        }
+
+        // Function to close modal
+        function closeModal() {
+            const modal = document.getElementById('modal');
+            modal.style.display = 'none';
+        }
+
+        // Handle file upload
+        document.getElementById('file-upload').addEventListener('change', function(event) {
+            const files = event.target.files;
+            Array.from(files).forEach(file => {
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const gallery = document.getElementById('gallery');
+                        const id = new Date().getTime(); // Unique ID based on timestamp
+                        const newItem = document.createElement('div');
+                        newItem.className = 'gallery-item';
+                        newItem.dataset.id = id;
+                        newItem.innerHTML = `
+                            <img src="${e.target.result}" alt="New Photo" onclick="openModal('${e.target.result}')">
+                            <div class="actions">
+                                <button class="like" onclick="likePhoto(${id})">
+                                    <i class="fas fa-heart"></i>
+                                    <span class="like-count" id="like-count-${id}">0</span>
+                                </button>
+                                <button class="comment" onclick="toggleComments(${id})"><i class="fas fa-comment"></i></button>
+                                <button class="share" onclick="showShareOptions('${e.target.result}')"><i class="fas fa-share-alt"></i></button>
+                            </div>
+                            <div class="comments" id="comments-${id}">
+                                <ul></ul>
+                                <input type="text" id="comment-input-${id}" placeholder="Add a comment...">
+                                <button onclick="addComment(${id})">Post</button>
+                            </div>
+                        `;
+                        gallery.appendChild(newItem);
+
+                        // Save to local storage
+                        const images = JSON.parse(localStorage.getItem('images')) || [];
+                        images.push({ id, src: e.target.result, likes: 0 });
+                        localStorage.setItem('images', JSON.stringify(images));
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        });
+
+        // Load images from local storage on page load
+        function loadImages() {
+            const images = JSON.parse(localStorage.getItem('images')) || [];
+            const gallery = document.getElementById('gallery');
+            images.forEach(image => {
+                const newItem = document.createElement('div');
+                newItem.className = 'gallery-item';
+                newItem.dataset.id = image.id;
+                newItem.innerHTML = `
+                    <img src="${image.src}" alt="Photo" onclick="openModal('${image.src}')">
+                    <div class="actions">
+                        <button class="like" onclick="likePhoto(${image.id})">
+                            <i class="fas fa-heart"></i>
+                            <span class="like-count" id="like-count-${image.id}">${image.likes}</span>
+                        </button>
+                        <button class="comment" onclick="toggleComments(${image.id})"><i class="fas fa-comment"></i></button>
+                        <button class="share" onclick="showShareOptions('${image.src}')"><i class="fas fa-share-alt"></i></button>
+                    </div>
+                    <div class="comments" id="comments-${image.id}">
+                        <ul></ul>
+                        <input type="text" id="comment-input-${image.id}" placeholder="Add a comment...">
+                        <button onclick="addComment(${image.id})">Post</button>
+                    </div>
+                `;
+                gallery.appendChild(newItem);
+            });
+        }
+
+        // Load images on page load
+        window.onload = loadImages;
+
+        // Close modal on pressing Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>
